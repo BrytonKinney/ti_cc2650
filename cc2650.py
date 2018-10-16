@@ -39,8 +39,8 @@ def h_conv(h_data):
 	msb = ord(h_data[3])
 	lsb = ord(h_data[2])
 	# shift the first byte forward 8 places, as this is big-endian (I think? haven't found out yet)
-	lsb_s = lsb << 8
-	result = msb + lsb_s
+	msb_s = msb << 8
+	result = msb_s + lsb
 	#remove status bits
 	result &= ~0x0003
 	hum_result = (result / 65536) * 100
@@ -57,8 +57,13 @@ def t_conv(t_data):
 
 def l_conv(l_data):
 	msb = l_data[1]
+	msb_s = msb << 8
 	lsb = l_data[0]
-	result = msb * (0.01 * lsb)
+	r = msb_s + lsb
+	m = r & 0x0FFF
+	e = (r & 0xF000) >> 12
+	e = 1 if e == 0 else e = (2 << (e - 1))
+	result = m * (0.01 * e)
 	print '%s LUX' % round(result, 2)
 
 def a_conv(a_data):
