@@ -6,6 +6,12 @@ sensor = btle.Peripheral('24:71:89:D0:1C:04')
 on_val = '\x01'
 off_val = '\x00'
 
+# 0x338
+# 00000110       0111000
+#             ^           	^
+#    accel range   accel x,y,z enable
+accel_on_val = hex(170)
+
 ir_start_addr = 0x27
 ir_data_addr = 0x24
 
@@ -56,7 +62,12 @@ def l_conv(l_data):
 	print '%s LUX' % round(result, 2)
 
 def a_conv(a_data):
-	
+	acc_x = a_data[6]
+	acc_y = a_data[7]
+	acc_z = a_data[8]
+	print '%s Accel X' % round((ord(acc_x) * 1.0) / (32768 / 16)), 2)
+	print '%s Accel Y' % round((ord(acc_y) * 1.0) / (32768 / 16)), 2)
+	print '%s Accel Z' % round((ord(acc_z) * 1.0) / (32768 / 16)), 2)
 
 sleep(1)
 
