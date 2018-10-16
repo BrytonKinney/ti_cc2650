@@ -31,7 +31,7 @@ sensor.writeCharacteristic(humid_start_addr, on_val, withResponse=True)
 # Turn on Light info
 sensor.writeCharacteristic(light_start_addr, on_val, withResponse=True)
 # Turn on Accelerometer info
-sensor.writeCharacteristic(accel_start_addr, on_val, withResponse=True)
+sensor.writeCharacteristic(accel_start_addr, accel_on_val, withResponse=True)
 
 #convert humidity to human-readable
 def h_conv(h_data):
@@ -80,6 +80,7 @@ for i in range(30):
 	h_conv(h_data)
 	a_data = sensor.readCharacteristic(accel_data_addr)
 	a_conv(a_data)
+	sleep(2)
 
 sensor.writeCharacteristic(ir_start_addr, off_val, withResponse=True)
 sensor.writeCharacteristic(light_start_addr, off_val, withResponse=True)
