@@ -62,9 +62,15 @@ def l_conv(l_data):
 	print '%s LUX' % round(result, 2)
 
 def a_conv(a_data):
-	acc_x = a_data[6]
-	acc_y = a_data[7]
-	acc_z = a_data[8]
+	acc_x1 = a_data[6]
+	acc_x2 = a_data[7]
+	acc_y1 = a_data[8]
+	acc_y2 = a_data[9]
+	acc_z1 = a_data[10]
+	acc_z2 = a_data[11]
+	acc_x = acc_x1 + (acc_x2 << 8)
+	acc_y = acc_y1 + (acc_y2 << 8)
+	acc_z = acc_z1 + (acc_z2 << 8)
 	print '%s Accel X' % round((ord(acc_x) * 1.0) / (32768 / 16)), 2)
 	print '%s Accel Y' % round((ord(acc_y) * 1.0) / (32768 / 16)), 2)
 	print '%s Accel Z' % round((ord(acc_z) * 1.0) / (32768 / 16)), 2)
