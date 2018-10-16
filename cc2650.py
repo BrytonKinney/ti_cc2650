@@ -43,7 +43,7 @@ def h_conv(h_data):
 	result = msb_s + lsb
 	#remove status bits
 	result &= ~0x0003
-	hum_result = (result / 65536) * 100
+	hum_result = (ord(result) / 65536) * 100
 	print '%s % Relative Humidity' % hum_result
 
 # Convert temp to human-readable
@@ -63,7 +63,7 @@ def l_conv(l_data):
 	m = r & 0x0FFF
 	e = (r & 0xF000) >> 12
 	e = 1 if e == 0 else e = (2 << (e - 1))
-	result = m * (0.01 * e)
+	result = ord(m) * (0.01 * ord(e))
 	print '%s LUX' % round(result, 2)
 
 def a_conv(a_data):
