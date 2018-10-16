@@ -7,8 +7,8 @@ on_val = '\x01'
 off_val = '\x00'
 
 # 0x338
-# 00000110       0111000
-#             ^           	^
+# 	00000110       	0111000
+#                 ^           	   ^
 #    accel range   accel x,y,z enable
 accel_on_val = hex(170)
 
