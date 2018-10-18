@@ -1,100 +1,113 @@
 from bluepy import btle
 from time import sleep
 
-sensor = btle.Peripheral('24:71:89:D0:1C:04')
+sensor = btle.Peripheral('54:6C:0E:79:23:85')
 
 on_val = '\x01'
 off_val = '\x00'
 
-# 0x338
-# 	00000110       	0111000
-#                 ^           	   ^
-#    accel range   accel x,y,z enable
-accel_on_val = hex(170)
+# should enable all features of accelerometer
+accel_on_val = '\x7F\x02'
+print(accel_on_val)
 
-ir_start_addr = 0x27
+ir_conf_addr = 0x27
 ir_data_addr = 0x24
 
-light_start_addr = 
-light_data_addr = 
+light_conf_addr = 0x47
+light_data_addr = 0x44
 
-humid_start_addr =
-humid_data_addr = 
+humid_conf_addr = 0x2F
+humid_data_addr = 0x2C
 
-accel_start_addr =
-accel_data_addr =
+accel_conf_addr = 0x3F
+accel_data_addr = 0x3C
 
 # Turn on IR temperature sensing
-sensor.writeCharacteristic(ir_start_addr, on_val, withResponse=True)
+sensor.writeCharacteristic(ir_conf_addr, on_val, withResponse=True)
 # Turn on Humidity info
-sensor.writeCharacteristic(humid_start_addr, on_val, withResponse=True)
+sensor.writeCharacteristic(humid_conf_addr, on_val, withResponse=True)
 # Turn on Light info
-sensor.writeCharacteristic(light_start_addr, on_val, withResponse=True)
+sensor.writeCharacteristic(light_conf_addr, on_val, withResponse=True)
 # Turn on Accelerometer info
-sensor.writeCharacteristic(accel_start_addr, accel_on_val, withResponse=True)
+sleep(2)
+sensor.writeCharacteristic(accel_conf_addr, accel_on_val, withResponse=True)
 
-#convert humidity to human-readable
-def h_conv(h_data):
+#convert humidity to a human-readable number
+def hum_conv(h_data):
 	# last two bytes of data contain humidity data
 	msb = ord(h_data[3])
 	lsb = ord(h_data[2])
-	# shift the first byte forward 8 places, as this is big-endian (I think? haven't found out yet)
+	# shift the first byte forward 8 places
 	msb_s = msb << 8
 	result = msb_s + lsb
 	#remove status bits
 	result &= ~0x0003
-	hum_result = (ord(result) / 65536) * 100
-	print '%s % Relative Humidity' % hum_result
+	hum_result = (float(result) / 65536) * 100
+	print '%s Percent Relative Humidity' % hum_result
 
 # Convert temp to human-readable
-def t_conv(t_data):
+def temp_conv(t_data):
 	msb = ord(t_data[3])
 	lsb = ord(t_data[2])
 	c = ((msb * 256 + lsb) / 4) * 0.03124
 	f = c * 9 / 5.0 + 32
 	print '%s degrees F' % round(f, 2)
 
-
-def l_conv(l_data):
-	msb = l_data[1]
-	msb_s = msb << 8
-	lsb = l_data[0]
-	r = msb_s + lsb
+# Read in data from Light sensor and convert the results
+# into LUX
+def lux_conv(l_data):
+	r = ord(l_data[0])
+	r2 = ord(l_data[1]) << 8
+	r = r + r2	
 	m = r & 0x0FFF
 	e = (r & 0xF000) >> 12
-	e = 1 if e == 0 else e = (2 << (e - 1))
-	result = ord(m) * (0.01 * ord(e))
+	if e == 0:
+		e = 1
+	else:
+		e = (2 << (e - 1))
+	result = float(m) * (0.01 * float(e))
 	print '%s LUX' % round(result, 2)
 
-def a_conv(a_data):
-	acc_x1 = a_data[6]
-	acc_x2 = a_data[7]
-	acc_y1 = a_data[8]
-	acc_y2 = a_data[9]
-	acc_z1 = a_data[10]
-	acc_z2 = a_data[11]
+#Convert data read in from accelerometer
+def accel_conv(a_data):
+	g_x1 = ord(a_data[0])
+	g_x2 = ord(a_data[1])
+	g_y1 = ord(a_data[2])
+	g_y2 = ord(a_data[3])
+	g_z1 = ord(a_data[4])
+	g_z2 = ord(a_data[5])
+	acc_x1 = ord(a_data[6])
+	acc_x2 = ord(a_data[7])
+	acc_y1 = ord(a_data[8])
+	acc_y2 = ord(a_data[9])
+	acc_z1 = ord(a_data[10])
+	acc_z2 = ord(a_data[11])
+	# add upper and lower half of 16 bits after shifting msb
 	acc_x = acc_x1 + (acc_x2 << 8)
 	acc_y = acc_y1 + (acc_y2 << 8)
 	acc_z = acc_z1 + (acc_z2 << 8)
-	print '%s Accel X' % round((ord(acc_x) * 1.0) / (32768 / 16)), 2)
-	print '%s Accel Y' % round((ord(acc_y) * 1.0) / (32768 / 16)), 2)
-	print '%s Accel Z' % round((ord(acc_z) * 1.0) / (32768 / 16)), 2)
+	gyro_x = g_x1 + (g_x2 << 8)
+	gyro_y = g_y1 + (g_y2 << 8)
+	gyro_z = g_z1 + (g_z2 << 8)
+	print '%s Accel X (G)' % round(((float(acc_x) * 1.0) / (32768 / 16)), 2)
+	print '%s Accel Y (G)' % round(((float(acc_y) * 1.0) / (32768 / 16)), 2)
+	print '%s Accel Z (G)' % round(((float(acc_z) * 1.0) / (32768 / 16)), 2)
 
 sleep(1)
 
 for i in range(30):
 	t_data = sensor.readCharacteristic(ir_data_addr)
-	t_conv(t_data)
+	temp_conv(t_data)
 	l_data = sensor.readCharacteristic(light_data_addr)
-	l_conv(l_data)
+	lux_conv(l_data)
 	h_data = sensor.readCharacteristic(humid_data_addr)
-	h_conv(h_data)
+	hum_conv(h_data)
 	a_data = sensor.readCharacteristic(accel_data_addr)
-	a_conv(a_data)
+	accel_conv(a_data)
 	sleep(2)
 
-sensor.writeCharacteristic(ir_start_addr, off_val, withResponse=True)
-sensor.writeCharacteristic(light_start_addr, off_val, withResponse=True)
-sensor.writeCharacteristic(humid_start_addr, off_val, withResponse=True)
-sensor.writeCharacteristic(accel_start_addr, off_val, withResponse=True)
+sensor.writeCharacteristic(ir_conf_addr, off_val, withResponse=True)
+sensor.writeCharacteristic(light_conf_addr, off_val, withResponse=True)
+sensor.writeCharacteristic(humid_conf_addr, off_val, withResponse=True)
+sensor.writeCharacteristic(accel_conf_addr, off_val, withResponse=True)
 
